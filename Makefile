@@ -1,8 +1,8 @@
 CurPath:=$(shell pwd)
-libObj:=$(CurPath)/Obj/libobj
-clientObj:=$(wildcard $(libObj)/*.o $(libObj)/clientobj/*.o)
-serverObj:=$(wildcard $(libObj)/*.o $(libObj)/serverobj/*.o)
-gateObj:=$(wildcard $(libObj)/*.o $(libObj)/gateobj/*.o)
+Objpath:=$(CurPath)/Obj
+clientObj:=$(wildcard $(Objpath)/libobj/*.o $(Objpath)/clientobj/*.o)
+serverObj:=$(wildcard $(Objpath)/libobj/*.o $(Objpath)/serverobj/*.o)
+gateObj:=$(wildcard $(Objpath)/libobj/*.o $(Objpath)/gateobj/*.o)
 
 BinPath:=$(CurPath)/Bin
 CC:=g++
