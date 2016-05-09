@@ -1,5 +1,7 @@
-#incdef _LoveThread_H_
+#ifndef _LoveThread_H_
 #define _LoveThread_H_
+
+#include <pthread.h>
 
 class CLoveThread
 {
@@ -17,12 +19,12 @@ public:
 	
 	void start();
 	void trminate();
-	void Isrunning();
+	bool Isrunning();
 	void wait();
 	CLoveThread::ThreadStatus GetStatues();
 	virtual void run()=0;
 private:
 	pthread_t m_thread;
 	ThreadStatus m_statues;
-£ý
+};
 #endif

@@ -6,11 +6,11 @@ CLoveMutex::CLoveMutex()
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&m_mutex,&attr);
-	pthread_mutexattr_destory(&attr);
+	pthread_mutexattr_destroy(&attr);
 }
 CLoveMutex::~CLoveMutex()
 {
-	pthread_mutex_destory(&m_mutex);
+	pthread_mutex_destroy(&m_mutex);
 }
 
 void CLoveMutex::enter()
