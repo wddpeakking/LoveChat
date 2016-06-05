@@ -5,6 +5,6 @@ Obj=$(patsubst %.cpp,%.o,$(Src))
 all:$(Obj)
 
 install:
-	$(shell cp *.o ../Obj/loginobj)
+	$(shell cp *.o ../Obj/gateobj)
 clean:
 	rm *.o
