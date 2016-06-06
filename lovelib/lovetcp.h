@@ -1,11 +1,14 @@
 #ifndef _LoveChat_UDP_H_
 #define _LoveChat_UDP_H_
-/*  
-	tcp 提供消息的读取和发送
-*/
+
+#include <iostream>
 
 class CLoveTcp
 {
+public:
+	CLoveTcp();
+	~CLoveTcp();
+
 	enum TCPType
 	{
 		en_Client,
@@ -13,12 +16,11 @@ class CLoveTcp
 		en_Other
 	};
 public:
-	CLoveTcp();
-	~CLoveTcp();
-public:
 	void StartTcp(TCPType type=en_Server,const std::string& strIp="",int nPort=9999);
 private:
 	void Init(); 
+
+	int setnonblocking( int fd );
 private:
 	int m_nSocket;
 };
