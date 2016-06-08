@@ -28,6 +28,97 @@ void CLoveTcp::Init()
 
 }
 
+bool CLoveTcp::CreateSocket()
+{
+	if((m_nSocket = socket(AF_INET,SOCK_STREAM,0))==-1)  
+	{
+		LogErrorMsg("create socket error");
+		exit(1);
+	}
+	if (setnonblocking(m_nSocket) == -1)
+	{
+		LogErrorMsg("setnonblocking error");
+	}
+	m_nEpoll = epoll_create(nMaxEpoll);
+	EpollAdd(m_nSocket);
+}
+bool CLoveTcp::BindSocket(int nPort)
+{
+	struct sockaddr_in server_addr;
+	memset(&server_addr,0,sizeof(struct sockaddr_in));
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+	server_addr.sin_port=htons(nPort);
+	if(bind(m_nSocket,(struct sockaddr *)(&server_addr),sizeof(struct sockaddr))==-1) 
+	{ 
+		LogErrorMsg("bin socket error");
+		return false; 
+	} 
+	return true;
+}
+bool CLoveTcp::ListenSocket()
+{
+	if( listen( m_nSocket, 1024*1024 ) == -1 )  
+	{  
+		LogErrorMsg("listen socket error");  
+		return false;  
+	}  
+	return true;
+}
+bool CLoveTcp::Connect(std::string& strIp,int nPort)
+{
+	if (strIp.empty())
+	{
+		LogErrorMsg("the IP is socket error");  
+		return false;
+	}
+	struct sockaddr_in server_addr;
+	memset(&server_addr,0,sizeof(struct sockaddr_in));
+	server_addr.sin_family=AF_INET;
+	server_addr.sin_addr.s_addr=inet_addr(strIp.c_str());
+	server_addr.sin_port=htons(nPort);
+	socklen_t nLen = 0;
+	if (int nConnect = connect(m_nSocket,(struct sockaddr *)(&server_addr),nLen) == -1)
+	{
+		LogErrorMsg("connect server error  serverIp=%s,port=%d",strIp.c_str(),nPort);  
+		return false;
+	}
+	return true;
+}
+int CLoveTcp::SendMsg(int nScoket,char* szBuf,int nLen)
+{
+
+}
+int CLoveTcp::RecvMsg(int nScoket,char* szBuf,int nLen)
+{
+
+}
+bool CLoveTcp::EpollAdd(int nFd)
+{
+	struct epoll_event ev;
+	ev.data.fd = nFd;
+	ev.events = EPOLLIN | EPOLLET;
+	if( epoll_ctl( m_nEpoll, EPOLL_CTL_ADD, nFd, &ev ) < 0 )  
+	{
+		LogErrorMsg("epoll_ctl error");  
+		return false; 
+	}
+	return false;
+}
+bool CLoveTcp::EpollDel(int nFd)
+{
+
+}
+bool CLoveTcp::EpollMod(int nFd)
+{
+
+}
+bool CLoveTcp::CloseSocket()
+{
+
+}
+
+
 void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 {
 	if((m_nSocket = socket(AF_INET,SOCK_STREAM,0))==-1)  
@@ -98,6 +189,8 @@ void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 						continue;
 					}
 					setnonblocking(nConnect);
+					ev.data.fd = nConnect;
+					ev.events = EPOLLIN | EPOLLET;
 					if( epoll_ctl( nEpoll, EPOLL_CTL_ADD, nConnect, &ev ) < 0 )  
 					{
 						LogErrorMsg("epoll_ctl error");  
@@ -106,11 +199,37 @@ void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 					LogInfoMsg("the client:\t%s\t connect to server",inet_ntoa(cliaddr.sin_addr));
 					nEpollfsd++;
 	        	}
-	        	else
+				//send data
+	        	else if (events[i].events & EPOLLOUT)
 	        	{
-	        		//read message
 
 	        	}
+				else if(events[i].events & EPOLLIN)
+	        	{
+	        		//read message
+					char szBuf = [1024];
+					memset(szBuf,0,1024);
+					int nRead = recv(events[i].events.data.fd,szBuf,1024);
+					if (nRead > 0)
+					{
+						std::cout<<"Recv msg:\t"<<szBuf<<std::endl;
+					}
+					else if (nRead == 0 )
+					{
+						close(events[i].events.data.fd);
+						ev.data.fd = 
+						events[i].events.data.fd
+						if( epoll_ctl( nEpoll, EPOLL_CTL_DEL, events[i].events.data.fd, &ev ) < 0 )  
+						{
+							LogErrorMsg("epoll_ctl error");  
+							exit(1);
+						}
+
+					}
+	        	}
+				else
+				{
+				}
 	        }
 		}
 	}
