@@ -2,6 +2,18 @@
 #define _LoveChat_UDP_H_
 
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <sys/epoll.h>
+#include <fcntl.h>
 
 class CLoveTcp
 {
@@ -26,8 +38,8 @@ public:
 	bool EpollAdd(int nFd);
 	bool EpollDel(int nFd);
 	bool EpollMod(int nFd);
-	bool CloseSocket();
-	void StartTcp(TCPType type=en_Server,const std::string& strIp="",int nPort=9999);
+	bool CloseSocket(int nfd);
+	//void StartTcp(TCPType type=en_Server,const std::string& strIp="",int nPort=9999);
 private:
 	void Init(); 
 

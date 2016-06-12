@@ -1,18 +1,4 @@
 #include "lovetcp.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <sys/epoll.h>
-#include <fcntl.h>
-
 #include "lovelog.h"
 
 CLoveTcp::CLoveTcp()
@@ -39,7 +25,13 @@ bool CLoveTcp::CreateSocket()
 	{
 		LogErrorMsg("setnonblocking error");
 	}
-	m_nEpoll = epoll_create(nMaxEpoll);
+	int nSock = 0;
+	if (setsockopt(m_nSocket,SOL_SOCKET,SO_REUSEADDR,&nSock,sizeof(nSock)) < 0)
+	{
+		/* code */
+		LogErrorMsg("setsockopt failed");
+	}
+	m_nEpoll = epoll_create1(EPOLL_CLOEXEC);
 	EpollAdd(m_nSocket);
 }
 bool CLoveTcp::BindSocket(int nPort)
@@ -107,18 +99,34 @@ bool CLoveTcp::EpollAdd(int nFd)
 }
 bool CLoveTcp::EpollDel(int nFd)
 {
-
+	struct epoll_event ev;
+	ev.data.fd = nFd;
+	ev.events = EPOLLIN | EPOLLET;
+	if( epoll_ctl( m_nEpoll, EPOLL_CTL_DEL, nFd, &ev ) < 0 )  
+	{
+		LogErrorMsg("epoll_del error");  
+		return false; 
+	}
+	return true;
 }
 bool CLoveTcp::EpollMod(int nFd)
 {
-
+	struct epoll_event ev;
+	ev.data.fd = nFd;
+	ev.events = EPOLLIN | EPOLLET;
+	if( epoll_ctl( m_nEpoll, EPOLL_CTL_MOD, nFd, &ev ) < 0 )  
+	{
+		LogErrorMsg("epoll_del error");  
+		return false; 
+	}
+	return true;
 }
-bool CLoveTcp::CloseSocket()
+bool CLoveTcp::CloseSocket(int nfd)
 {
-
+	close(nfd);
 }
 
-
+/*
 void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 {
 	if((m_nSocket = socket(AF_INET,SOCK_STREAM,0))==-1)  
@@ -177,7 +185,7 @@ void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 	        }  
 			for (int i=0;i<nEpollWaitFd;++i)
 			{
-	        	/* code */
+
 	        	if( events[i].data.fd == m_nSocket && nEpollfsd < nMaxEpoll )
 	        	{
 					int nConnect = -1;
@@ -243,7 +251,7 @@ void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 
 	}
 }
-
+*/
 
 int CLoveTcp::setnonblocking( int fd )  
 {  
