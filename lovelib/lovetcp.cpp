@@ -19,7 +19,7 @@ bool CLoveTcp::CreateSocket()
 	if((m_nSocket = socket(AF_INET,SOCK_STREAM,0))==-1)  
 	{
 		LogErrorMsg("create socket error");
-		exit(1);
+		return false;
 	}
 	if (setnonblocking(m_nSocket) == -1)
 	{
@@ -32,7 +32,11 @@ bool CLoveTcp::CreateSocket()
 		LogErrorMsg("setsockopt failed");
 	}
 	m_nEpoll = epoll_create1(EPOLL_CLOEXEC);
-	EpollAdd(m_nSocket);
+	if (EpollAdd(m_nSocket) == false)
+	{
+		return false;
+	};
+	return true;
 }
 bool CLoveTcp::BindSocket(int nPort)
 {
@@ -85,6 +89,18 @@ int CLoveTcp::RecvMsg(int nScoket,char* szBuf,int nLen)
 {
 
 }
+
+int CLoveTcp::Accept(sockaddr_in& addr)
+{
+	int nConnect = -1;
+	socklen_t nLen = sizeof(struct sockaddr);
+	if ((nConnect = accept(m_nSocket,(struct sockaddr*)&addr, &nLen)) == -1)
+	{
+		LogErrorMsg("accept error");  
+	}
+	return nConnect;
+}
+
 bool CLoveTcp::EpollAdd(int nFd)
 {
 	struct epoll_event ev;
@@ -125,7 +141,10 @@ bool CLoveTcp::CloseSocket(int nfd)
 {
 	close(nfd);
 }
-
+int CLoveTcp::GetSocket()const
+{
+	return m_nSocket;
+}
 /*
 void CLoveTcp::StartTcp(TCPType type,const std::string& strIp,int nPort)
 {
