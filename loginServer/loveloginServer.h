@@ -1,14 +1,16 @@
 #ifndef _lovechat_loveLoginServer_H_
 #define _lovechat_loveLoginServer_H_
 #include "../lovelib/lovetcp.h"
+#include "../lovelib/loveThread.h"
+#include "../lovelib/type.h"
 
 //accept thread
-class CAccep : public CLoveThread
+class CServerAccep : public CLoveThread
 {
 public:
-	CAccep(CLoveTcp* pTcp)
+	CServerAccep(CLoveTcp* pTcp)
 		:m_pTcpServer(pTcp){};
-	~CAccep(){};
+	~CServerAccep(){};
 
 	virtual void run();
 private:
@@ -16,21 +18,21 @@ private:
 };
 
 //send thread
-class CSend : public CLoveThread
+class CServerSend : public CLoveThread
 {
 public:
-	CSend(CLoveTcp* pTcp):m_pTcpServer(pTcp){};
-	~CSend(){};
+	CServerSend(CLoveTcp* pTcp):m_pTcpServer(pTcp){};
+	~CServerSend(){};
 	virtual void run();
 private:
 	CLoveTcp* m_pTcpServer;
 };
 //recv thread
-class CRecv : public CLoveThread 
+class CServerRecv : public CLoveThread 
 {
 public:
-	CRecv(CLoveTcp* pTcp):m_pTcpServer(pTcp){};
-	~CRecv(){};
+	CServerRecv(CLoveTcp* pTcp):m_pTcpServer(pTcp){};
+	~CServerRecv(){};
 	virtual void run();
 private:
 	CLoveTcp* m_pTcpServer;
@@ -40,19 +42,24 @@ class CLoveChatLoginServer : public CLoveTcp : public CLoveThread
 public:
 	CLoveChatLoginServer();
 	~CLoveChatLoginServer();
-
 	virtual void run();
+public:
+	bool IsNeedRecv();
+	bool IsNeedSend();
+	bool AddNewConnect(int nConnect);
+	bool DeleteConnect(int nConnect);
 
 private:
 	void Init();
 
 private:
-	CAccep* m_pAccept;
-	CSend* m_pSend;
-	CRecv* m_pRecv;
+	CServerAccep* m_pAccept;
+	CServerSend* m_pSend;
+	CServerRecv* m_pRecv;
 
-	std::list<int> m_recvList;
-	std::list<int> m_sendList;
-	std::list<int> m_connList;
+	FunType::ListInt m_recvList;
+	FunType::ListPairIntStr m_sendList;
+	std::map<int,int> m_connMap;
+
 };
 #endif

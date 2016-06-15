@@ -2,7 +2,7 @@
 #include "../lovelib/lovelog.h"
 
 
-CAccep::run()
+CServerAccep::run()
 {
 	CLoveChatLoginServer* pServer = static_cast<CLoveChatLoginServer>(m_pTcpServer);
 	if (pServer != NULL)
@@ -21,44 +21,64 @@ CAccep::run()
 	}
 }
 
-CSend::run()
+CServerSend::run()
 {
 	CLoveChatLoginServer* pServer = static_cast<CLoveChatLoginServer>(m_pTcpServer);
 	if (pServer != NULL)
 	{
 		while (true)
 		{
+			if (!pServer->IsNeedSend())
+			{
+				continue;
+			}
 			int nSend = m_pTcpServer->SendMsg();
 		}
 	}
 }
 
-CRecv::run()
+CServerRecv::run()
 {
-	char szBuf = [1024];
-	memset(szBuf,0,1024);
-	int nRead = recv(events[i].events.data.fd,szBuf,1024);
-	if (nRead > 0)
+	CLoveChatLoginServer* pServer = static_cast<CLoveChatLoginServer>(m_pTcpServer);
+	
+	while (true)
 	{
-		std::cout<<"Recv msg:\t"<<szBuf<<std::endl;
-	}
-	else if (nRead == 0 )
-	{
-		close(events[i].events.data.fd);
-		ev.data.fd = 
-			events[i].events.data.fd
-			if( epoll_ctl( nEpoll, EPOLL_CTL_DEL, events[i].events.data.fd, &ev ) < 0 )  
+		if (!pServer->IsNeedRecv())
+		{
+			continue;
+		}
+		char szBuf = [1024];
+		memset(szBuf,0,1024);
+		int nRead = recv(events[i].events.data.fd,szBuf,1024);
+		if (nRead > 0)
+		{
+			std::cout<<"Recv msg:\t"<<szBuf<<std::endl;
+		}
+		else if (nRead == 0 )
+		{
+			close(events[i].events.data.fd);
+
+			if( pServer->EpollDel(events[i].events.data.fd) == false )  
 			{
 				LogErrorMsg("epoll_ctl error");  
 				exit(1);
 			}
+			//delete from list
 
+			//notify dataserver user loginout
+			//pServer->SendMsg();
+
+		}
+		else{
+
+		}
 	}
+	
 }
 
 CLoveChatLoginServer::CLoveChatLoginServer()
 {
-
+	Init();
 }
 CLoveChatLoginServer::~CLoveChatLoginServer()
 {
@@ -83,15 +103,15 @@ void CLoveChatLoginServer::Init()
 		return;
 	}
 	//创建监听线程
-	m_pAccept = new CAccep(this);
+	m_pAccept = new CServerAccep(this);
 	m_pAccept->start();
 
 	//创建接收线程
-	m_pRecv = new CRecv(this);
+	m_pRecv = new CServerRecv(this);
 	m_pRecv->start();
 
 	//创建发送线程
-	m_pSend = new CSend(this);
+	m_pSend = new CServerSend(this);
 	m_pSend->start();
 }
 
@@ -125,4 +145,21 @@ void CLoveChatLoginServer::run()
 			}
 		}
 	}
+}
+
+bool CLoveChatLoginServer::IsNeedRecv()
+{
+	if (m_recvList.size()>=1)
+	{
+		return true;
+	}
+	return false;
+}
+bool CLoveChatLoginServer::IsNeedSend()
+{
+	if (m_pSend.size()>=1)
+	{
+		return true;
+	}
+	return false;
 }
